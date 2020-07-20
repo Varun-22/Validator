@@ -12,13 +12,19 @@ class Rule(metaclass=ABCMeta):
         self.class_name = type(self).__name__
 
     def __call__(self, arg):
-        return self.check(arg)
+        result = self.check(arg)
+        if isinstance(result, bool):
+            return result
+        return False
 
     def check(self, arg):
         pass
 
     def __from_str__(self, arg):
         pass
+
+    def aliases(self, arg):
+        return []
 
     # Get/Set Class Name
     def get_class_name(self):
@@ -74,4 +80,6 @@ for (_, file, _) in pkgutil.iter_modules([Path(__file__).parent]):
     names = [x for x in pkg.__dict__ if not x.startswith("_")]
 
     # add class from module to globals() adn all (e.g. add 'min.Min')
-    __all__.update({k.lower(): getattr(pkg, k) for k in names})
+    for k in names:
+        rule_class = getattr(pkg, k)
+        __all__.update({k.lower(): rule_class})
