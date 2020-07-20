@@ -23,9 +23,6 @@ class Rule(metaclass=ABCMeta):
     def __from_str__(self, arg):
         pass
 
-    def aliases(self, arg):
-        return []
-
     # Get/Set Class Name
     def get_class_name(self):
         return self.class_name
@@ -77,9 +74,13 @@ for (_, file, _) in pkgutil.iter_modules([Path(__file__).parent]):
     pkg = importlib.import_module(module_abs_path)
 
     # Import all classes from given modules
-    names = [x for x in pkg.__dict__ if not x.startswith("_")]
+    rule_class = [x for x in pkg.__dict__ if not x.startswith("_")][-1:]
 
     # add class from module to globals() adn all (e.g. add 'min.Min')
-    for k in names:
-        rule_class = getattr(pkg, k)
-        __all__.update({k.lower(): rule_class})
+    for i in rule_class:
+        rule_class = getattr(pkg, i)
+        if "aliases" in rule_class.__dict__:
+            for alias in rule_class.aliases:
+                __all__.update({alias.lower(): rule_class})
+
+        __all__.update({i.lower(): rule_class})
